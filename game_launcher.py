@@ -7,6 +7,6 @@ def main():
     game = othello_game.Game()
     
     # Phase 2: Draw the board
-    game.start_game()
+    game.run()
 
 main()
