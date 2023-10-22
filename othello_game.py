@@ -1,6 +1,6 @@
 from game2dboard import Board
-
 import time
+import random
 
 # Key commands
 MSG = "ESC: Close    F2: Restart"
@@ -48,7 +48,7 @@ class Game:
         '''
         self.board.on_key_press = self.keyboard_command
         self.board.on_start = self.initialize_game_settings
-        self.board.on_mouse_click = self.play
+        self.board.on_mouse_click = self.play_as_human_player
 
     def keyboard_command(self, key):
         if key == "Escape":
@@ -113,7 +113,7 @@ class Game:
     
     # (ADLT) Triggered when the user clicks on the board with the mouse.
     # It shouldnt directly get through here if the computer is thinking/moving, though.
-    def play(self, btn, r, c):
+    def play_as_human_player(self, btn, r, c):
         ''' 
             Arguments: 
                         btn: Mouse button clicked
@@ -139,6 +139,7 @@ class Game:
                 # Make the move, actually. Board update, disk paint, disks fliped, etc.
 
                 self.make_current_move()
+
             else:
                 print("Current move is NOT legal: ",r," ", c)
                 return
@@ -147,9 +148,63 @@ class Game:
          # Check if the game is over if no moves are possible by AI-computer 
         # or if the board is full of disks
         
-        self.check_game_over()
+        if self.is_game_over():
+            return
+        else:
+            self.play_as_ai_computer_player()
 
-    def check_game_over(self):
+    def play_as_ai_computer_player(self):
+
+        self.board.cursor = "None"
+
+        while True:    
+            self.current_player = 2
+            # 1. Play the AI-computer´s turn
+            if self.current_player_can_move():
+                print("Current player(AI-Computer) has possible move(s). Player ID: ", self.current_player)
+                time.sleep(2)
+                self.make_random_move_by_current_player()
+
+            if self.is_game_over():
+                return
+            else:
+                self.current_player = 1
+                if self.current_player_can_move():
+                    self.board.cursor = "arrow"
+                    # if human player can move after computer´s turn, then exit the loop
+                    break
+    
+    def make_random_move_by_current_player(self):
+        # Makes a random possible move on the board.
+        possible_moves = self.get_possible_moves_by_current_player()
+        print("Possible moves for AI-Computer: ", possible_moves)
+        if possible_moves:
+            self.current_move = random.choice(possible_moves)
+            self.make_current_move()
+
+
+    # (ADLT) Returns a list of possible moves that can be made by the current player
+    # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
+    # (TO DO) Evaluate if instead of linked list, a tree is better to store the possible moves
+        # depending on the real AI algorithm to be used.
+    def get_possible_moves_by_current_player(self):
+        ''' 
+            Returns a list of possible moves that can be made by the current player
+            Every move is a tuple of coordinates (row, col).
+        '''
+        rows_array = range(0, self.board.nrows, 1)
+        cols_array = range(0, self.board.ncols, 1)
+        allowed_moves_list = []
+        for row in rows_array:
+            for col in cols_array:
+                # Move to check and append if valid
+                move_to_check = (row, col)
+                if self.move_has_disk_to_flip(move=move_to_check, player_number=self.current_player):
+                    allowed_moves_list.append(move_to_check)
+
+        return allowed_moves_list
+
+    def is_game_over(self):
         if not self.player_can_move(1) and not self.player_can_move(2):
             if self.num_disks_dictionary[1] > self.num_disks_dictionary[2]:
                 print('*****************')
@@ -157,9 +212,14 @@ class Game:
                 self.board.print(MSG + ' -- Wooohooo! You won!! Congrats!!')
             elif self.num_disks_dictionary[1] < self.num_disks_dictionary[2]:
                 print('*****************')
-                print('Too bad!! The computer won!! ;)')
-                self.board.print(MSG + ' -- Too bad!! The computer won!! ;)')
+                print('Too bad, you lost!! The computer won!! ;)')
+                self.board.print(MSG + ' -- Too bad, you lost!! The computer won!! ;)')
+
+            return True
         
+        else:
+            return False # Game is not over yet
+
         # (ADLT) TO DO CLEAN UP BELOW IF NOT NEEDED
 
         # total_disks_on_board = self.num_disks_dict[1] + self.num_disks_dict[2]
