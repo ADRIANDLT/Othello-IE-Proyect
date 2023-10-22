@@ -28,6 +28,9 @@ class Game:
 
         # Board initialization
         self.board = Board(board_width, board_height)
+        
+        # If you want computer AI White disks to start, uncomment the line below: 
+            #self.board.start_timer(2000)
         self.board.cell_size = CELL_SIZE
         self.board.margin_color = self.board.grid_color = LINE_COLOR
         self.board.cell_color = CELL_COLOR
@@ -38,7 +41,7 @@ class Game:
 
         # Global settings initialization
         self.board_size_n = min(self.board.nrows, self.board.ncols)
-        
+
         # Event-Handlers initialization
         '''
         Assign the keyboard_command and initialize_game_settings methods as event handlers, 
@@ -47,16 +50,12 @@ class Game:
         By omitting the parentheses, we are assigning the methods themselves as event handlers
         '''
         self.board.on_key_press = self.keyboard_command
-        self.board.on_start = self.initialize_game_settings
+        self.board.on_start = self.starting_game_initialization
         self.board.on_mouse_click = self.play_as_human_player
-
-    def keyboard_command(self, key):
-        if key == "Escape":
-            self.board.close()
-        elif key == "F2":
-            self.initialize_game_settings()
-
-    def initialize_game_settings(self):
+        # Eevent handler for timer to decouple the computer-AI move from the human-user's click
+        self.board.on_timer = self.play_as_ai_computer_player    
+        
+    def starting_game_initialization(self):
             
         # Game settings initialization
         # Game settings initialization
@@ -68,7 +67,7 @@ class Game:
         # (ADLT) Use a dictionary to store the number of disks for each player
         # so, index 0 (if it was an array) is not used and this way with dictionary 
         # the index coincides with the Player's number (1 or 2). 
-        #
+
         self.num_disks_dictionary = {1: 2, 2: 2}
 
         if self.board_size_n < 2:
@@ -110,7 +109,13 @@ class Game:
 
     def run(self):
         self.board.show()
-    
+
+    def keyboard_command(self, key):
+        if key == "Escape":
+            self.board.close()
+        elif key == "F2":
+            self.starting_game_initialization()
+
     # (ADLT) Triggered when the user clicks on the board with the mouse.
     # It shouldnt directly get through here if the computer is thinking/moving, though.
     def play_as_human_player(self, btn, r, c):
@@ -151,9 +156,19 @@ class Game:
         if self.is_game_over():
             return
         else:
-            self.play_as_ai_computer_player()
+            #self.play_as_ai_computer_player() (COMMENTED BECAUSE IT IS COUPLED)
+            # 2. Play the computer-AI turn
+            # Start a Timer (for just one trigger ONLY) for AI-Computer to move
+            # This is the way to decouple the computer-AI move
+            # from the human-user's click, so user's move is painted first
+            # Otherwise user's move and AI-computer move would be painted at the same time.
+            # GitHub issue related: https://github.com/ADRIANDLT/Othello-IE-Proyect/issues/2
+            self.board.start_timer(2000)
 
     def play_as_ai_computer_player(self):
+        
+        # First of all, disable the Timer so it doesn't get triggered again, automatically.
+        self.board.stop_timer()
 
         self.board.cursor = "None"
 
