@@ -23,6 +23,13 @@ POSSIBLE_MOVE_DIRECTIONS = [(-1, -1), (-1, 0), (-1, +1),
 # ARRAY of tuples (row, col): 
 # POSSIBLE_MOVE_DIRECTIONS = [(-1, -1), (-1, 0), (-1, +1), (0, -1), (0, +1),(+1, -1), (+1, 0), (+1, +1)]
 
+
+
+# The constructor method for the OthelloGame class in the othello_game.py file.
+
+# initializes the game board, sets the board size, creates the output bar for messages and instructions,
+    # and initializes event handlers for keyboard commands, starting the game, mouse clicks, and timer for the computer AI move.
+
 class Game:
     def __init__(self, board_width=8, board_height=8):
 
@@ -53,7 +60,10 @@ class Game:
         self.board.on_start = self.starting_game_initialization
         self.board.on_mouse_click = self.play_as_human_player
         # Eevent handler for timer to decouple the computer-AI move from the human-user's click
-        self.board.on_timer = self.play_as_ai_computer_player    
+        self.board.on_timer = self.play_as_ai_computer_player
+
+
+    # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
         
     def starting_game_initialization(self):
             
