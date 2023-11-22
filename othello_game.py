@@ -324,8 +324,39 @@ class Game:
                     allowed_moves_list.append(move_to_check)
 
         return allowed_moves_list
-    
-    
+    # (ADLT) Returns a list of possible moves that can be made by the current player
+    # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
+    # (TO DO) Evaluate if instead of linked list, a tree is better to store the possible moves
+        # depending on the real AI algorithm to be used.
+
+    def evaluate_move(self, move):
+        score = 0
+
+        # Disk flipping score
+        flipping_score = sum(self.direction_has_disk_to_flip(move, direction, self.current_player)
+                             for direction in POSSIBLE_MOVE_DIRECTIONS)
+        score += flipping_score
+
+        # Board position score
+        if move in [(0, 0), (0, self.board_size_n - 1), (self.board_size_n - 1, 0),
+                    (self.board_size_n - 1, self.board_size_n - 1)]:
+            score += 100  # High score for corners
+        elif move[0] in [0, self.board_size_n - 1] or move[1] in [0, self.board_size_n - 1]:
+            score += 50  # High score for edges
+
+        # Mobility and future opportunities
+        # Temporarily make the move and evaluate the opponent's response
+        original_value = self.board[move[0]][move[1]]
+        self.board[move[0]][move[1]] = self.current_player
+        opponent_moves = self.get_possible_moves_by_player(3 - self.current_player)
+        self.board[move[0]][move[1]] = original_value  # Revert the temporary move
+
+        mobility_score = -len(opponent_moves)  # Less opponent moves is better
+        score += mobility_score
+
+        # Stability (more complex to evaluate, can be added later)
+
+        return score
     
     def make_best_move_by_current_player(self):
         possible_moves = self.get_possible_moves_by_current_player()
@@ -334,12 +365,6 @@ class Game:
             best_move = max(possible_moves, key=lambda move: self.evaluate_move(move))
             self.current_move = best_move
             self.make_current_move()
-    
-    # (ADLT) Returns a list of possible moves that can be made by the current player
-    # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
-    # (TO DO) Evaluate if instead of linked list, a tree is better to store the possible moves
-        # depending on the real AI algorithm to be used.
-
     
     def is_game_over(self):
         if not self.player_can_move(1) and not self.player_can_move(2):
@@ -446,6 +471,7 @@ class Game:
 
     # (ADLT) Triggered when the user clicks on the board with the mouse.
     # It shouldnt directly get through here if the computer is thinking/moving, though.
+
    
     def undo_last_two_moves(self):
         self.board.cursor = "arrow"
