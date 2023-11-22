@@ -153,7 +153,7 @@ class Game:
                 print("Current move HAS disk(s) to flip: ",r," ", c)
                 # (ADLT)
                 # Disable user's click 
-                self.board.cursor = "None"   # "watch"
+                self.board.cursor = None   # "watch"
                 # ?? A way to disable mouse-click temporarely with Game2DBoard library...
 
                 # Make the move, actually. Board update, disk paint, disks fliped, etc.
@@ -180,44 +180,64 @@ class Game:
             # GitHub issue related: https://github.com/ADRIANDLT/Othello-IE-Proyect/issues/2
             self.board.start_timer(2000)
 
+
+
+    def evaluate_move(self, move):
+        score = 0
+
+        # Disk flipping score
+        flipping_score = sum(self.direction_has_disk_to_flip(move, direction, self.current_player)
+                             for direction in POSSIBLE_MOVE_DIRECTIONS)
+        score += flipping_score
+
+        # Board position score
+        if move in [(0, 0), (0, self.board_size_n - 1), (self.board_size_n - 1, 0),
+                    (self.board_size_n - 1, self.board_size_n - 1)]:
+            score += 100  # High score for corners
+        elif move[0] in [0, self.board_size_n - 1] or move[1] in [0, self.board_size_n - 1]:
+            score += 50  # High score for edges
+
+        # Mobility and future opportunities
+        # Temporarily make the move and evaluate the opponent's response
+        original_value = self.board[move[0]][move[1]]
+        self.board[move[0]][move[1]] = self.current_player
+        opponent_moves = self.get_possible_moves_by_player(3 - self.current_player)
+        self.board[move[0]][move[1]] = original_value  # Revert the temporary move
+
+        mobility_score = -len(opponent_moves)  # Less opponent moves is better
+        score += mobility_score
+
+        # Stability (more complex to evaluate, can be added later)
+
+        return score
+    
+    def make_best_move_by_current_player(self):
+        possible_moves = self.get_possible_moves_by_current_player()
+        if possible_moves:
+            # Evaluate each move and choose the one with the highest score
+            best_move = max(possible_moves, key=lambda move: self.evaluate_move(move))
+            self.current_move = best_move
+            self.make_current_move()
+
     def play_as_ai_computer_player(self):
-        
         # First of all, disable the Timer so it doesn't get triggered again, automatically.
         self.board.stop_timer()
 
-        self.board.cursor = "None"
+        self.board.cursor = None
 
-        while True:    
-            self.current_player = 2
-            # 1. Play the AI-computer´s turn
-            if self.current_player_can_move():
-                print("Current player(AI-Computer) has possible move(s). Player ID: ", self.current_player)
-                time.sleep(2)
-                self.make_random_move_by_current_player()
-
-            if self.is_game_over():
-                return
-            else:
-                self.current_player = 1
-                if self.current_player_can_move():
-                    self.board.cursor = "arrow"
-                    # if human player can move after computer´s turn, then exit the loop
-                    break
+        self.current_player = 2
+        # 1. Play the AI-computer´s turn
+        if self.current_player_can_move():
+            print("Current player(AI-Computer) has possible move(s). Player ID: ", self.current_player)
+            time.sleep(2)
+            self.make_best_move_by_current_player()
     
-    def make_random_move_by_current_player(self):
-        # Makes a random possible move on the board.
-        possible_moves = self.get_possible_moves_by_current_player()
-        print("Possible moves for AI-Computer: ", possible_moves)
-        if possible_moves:
-            self.current_move = random.choice(possible_moves)
-            self.make_current_move()
-
 
     # (ADLT) Returns a list of possible moves that can be made by the current player
     # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
     # (TO DO) Evaluate if instead of linked list, a tree is better to store the possible moves
         # depending on the real AI algorithm to be used.
-    def get_possible_moves_by_current_player(self):
+    def get_possible_moves_by_current_player(self, player_number=None):
         ''' 
             Returns a list of possible moves that can be made by the current player
             Every move is a tuple of coordinates (row, col).
