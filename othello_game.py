@@ -348,7 +348,7 @@ class Game:
         # Temporarily make the move and evaluate the opponent's response
         original_value = self.board[move[0]][move[1]]
         self.board[move[0]][move[1]] = self.current_player
-        opponent_moves = self.get_possible_moves_by_player(3 - self.current_player)
+        opponent_moves = self.get_possible_moves_by_current_player(3 - self.current_player)
         self.board[move[0]][move[1]] = original_value  # Revert the temporary move
 
         mobility_score = -len(opponent_moves)  # Less opponent moves is better
