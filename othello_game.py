@@ -3,7 +3,7 @@ import time
 import random
 
 # Key commands
-MSG = "ESC: Close    F2: Restart"
+MSG = "U: Undo Last Moves    F2: Restart    ESC: Exit Game"
 
 # Defines sizes of the square and tile, colors of the board, line, 
 # and tile as constants
@@ -61,19 +61,15 @@ class Game:
         self.board.on_mouse_click = self.play_as_human_player
         # Eevent handler for timer to decouple the computer-AI move from the human-user's click
         self.board.on_timer = self.play_as_ai_computer_player
-
+        # Stack feature for saving movements feature
+        self.algo_stack = []
 
     # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
         
     def starting_game_initialization(self):
-            
+        self.algo_stack.clear()
         # Game settings initialization
-        # Game settings initialization
-        # Player 1 is Human-user
-        # Player 2 is Computer-AI
-        # Player 1 starts the game
-        self.current_player = 1
-
+        
         # (ADLT) Use a dictionary to store the number of disks for each player
         # so, index 0 (if it was an array) is not used and this way with dictionary 
         # the index coincides with the Player's number (1 or 2). 
@@ -117,6 +113,13 @@ class Game:
 
         self.board.print(MSG)
 
+        # Player 1 is Human-user
+        # Player 2 is Computer-AI
+        # Player 1 starts the game
+        self.current_player = 2 # Save initial state move as player 2 (Computer-AI)
+        self.save_moves() # Save state before making a move
+        self.current_player = 1 # The turn is for player 1 (Human-user)
+
     def run(self):
         self.board.show()
 
@@ -125,6 +128,8 @@ class Game:
             self.board.close()
         elif key == "F2":
             self.starting_game_initialization()
+        elif key == "u" or key == "U":
+            self.undo_last_two_moves()
 
     # (ADLT) Triggered when the user clicks on the board with the mouse.
     # It shouldnt directly get through here if the computer is thinking/moving, though.
@@ -280,7 +285,7 @@ class Game:
         if move != () and self.coord_is_valid(move[0], move[1]) \
            and content_of_move_cell == None:
             for direction in POSSIBLE_MOVE_DIRECTIONS:
-                print("Direction: ",direction)
+                # print("Direction: ",direction)
                 has_disk_to_flip = self.direction_has_disk_to_flip(move, direction, player_number)
                 if has_disk_to_flip:
                     return True
@@ -298,7 +303,7 @@ class Game:
         ''' 
             Returns: True if the current player has possible moves, False if not.
         '''
-        print("Current player is: ", player_number)
+        # print("Current player is: ", player_number)
 
         rows_array = range(0, self.board.nrows, 1)
         cols_array = range(0, self.board.ncols, 1)
@@ -307,9 +312,9 @@ class Game:
         player_has_possible_move = False
 
         for row in rows_array:
-            print("Range of rows: ", rows_array)
+            # print("Range of rows: ", rows_array)
             for col in cols_array:
-                print("Range of cols: ", cols_array)
+                # print("Range of cols: ", cols_array)
                 test_move = (row, col)
                 if self.move_has_disk_to_flip(test_move, player_number):
                     player_has_possible_move = True
@@ -358,12 +363,97 @@ class Game:
             else:
                 # Disk color is the one to flip, so continue looking in the same direction
                 if self.board[row][col] == disk_type_to_flip:
-                    print("Found disk to flip: ", row, ",", col, "content:", self.board[row][col])
+                    # print("Found disk to flip: ", row, ",", col, "content:", self.board[row][col])
                     distance += 1
                     disks_to_flip_counter += 1
         
         return (disks_to_flip_counter > 0) # Return True if there is any disk to flip, False if not.
     
+    def save_moves(self):
+        state = {
+            # "board": [[self.board[r][c] for c in range(self.board.ncols)] for r in range(self.board.nrows)],
+            "board": self.copy_board_cell_states(),
+            "current_player": self.current_player,
+            "num_disks_dictionary": self.num_disks_dictionary.copy()
+        }
+        self.algo_stack.append(state)
+        print("Saved state: ", state)
+    
+    def copy_board_cell_states(self):
+        board_cell_states = [[None for _ in range(8)] for _ in range(8)]
+        rows_array = range(0, self.board.nrows, 1)
+        cols_array = range(0, self.board.ncols, 1)
+        for row in rows_array:
+            for col in cols_array:
+                board_cell_states[row][col] = self.board[row][col]
+
+        return board_cell_states
+
+
+    def undo_last_two_moves(self):
+        self.board.cursor = "arrow"
+        print("Current player before undoing: ", self.current_player)
+        if len(self.algo_stack) < 2:
+           print("Not possible to undo move since there are no moves to undo.")
+           return
+        # check if the last 2 moves are the same player
+        if self.check_last_two_moves_from_same_player() or self.algo_stack[-1]["current_player"] == 1:
+            self.algo_stack.pop()
+        else:
+            self.algo_stack.pop()
+            self.algo_stack.pop()
+
+        previous_state = self.algo_stack.pop()
+        print("Board before undoing:")
+        print(self.board)
+        print("**********")
+        rows_array = range(0, self.board.nrows, 1)
+        cols_array = range(0, self.board.ncols, 1)
+        matrix = previous_state["board"]
+        for row in rows_array:
+            for col in cols_array:
+                self.board[row][col] = matrix[row][col]
+        print("Board after undoing:")
+        print(self.board)
+        print("**********")
+        
+        print("Elements in stack: ",self.algo_stack.count)
+        if len(self.algo_stack) == 0:
+            # if we only have the initial move/postition, then the current player´s turn is 1
+            self.current_player = 2
+            self.save_moves()
+            self.current_player = 1
+        else:
+            self.current_player = previous_state["current_player"]
+            self.save_moves()
+            # The current players turn is the contrary of the previous state
+            self.current_player = 3 - previous_state["current_player"]
+        
+        self.num_disks_dictionary = previous_state["num_disks_dictionary"]
+        
+        print("Current player after undoing: ", self.current_player)
+        # refresh of the board is done when the function is finished
+
+    def check_last_two_moves_from_same_player(self):
+        if len(self.algo_stack) < 2:
+            print("Not enough moves to check.")
+            return False
+        
+        for i in range(len(self.algo_stack)):
+            print("Player: ", i, " ", self.algo_stack[i]["current_player"])
+
+        last_move = self.algo_stack[-1]
+        second_last_move = self.algo_stack[-2]
+        print("Last move: ", last_move)
+        print("Second last move: ", second_last_move)
+
+        last_player = self.algo_stack[-1]["current_player"]
+        second_last_player = self.algo_stack[-2]["current_player"]
+        if last_player == second_last_player:
+            return True
+        else:
+            False
+
     def make_current_move(self):
         ''' 
             Puts a disk for the player's current move on the board 
@@ -374,6 +464,8 @@ class Game:
             (flip_disks_for_current_move() function should also increase 
             the number of disks of the current player by 1)
         '''
+        
+
         if self.move_has_disk_to_flip(self.current_move, self.current_player): # (ADLT) This is redundant, since we already checked this in play()
             # Put current player color on the current move cell
             self.board[self.current_move[0]][self.current_move[1]] = self.current_player
@@ -381,6 +473,7 @@ class Game:
             self.num_disks_dictionary[self.current_player] += 1
             
             self.flip_disks_for_current_move()
+            self.save_moves()  # Save state after making a move
 
     def flip_disks_for_current_move(self):
         '''
@@ -414,12 +507,12 @@ class Game:
 
                         # Update the number of disks for the current player and the contrary
                         self.num_disks_dictionary[self.current_player] += 1
-                        print("New current player total disks:",self.num_disks_dictionary[self.current_player])
+                       # print("New current player total disks:",self.num_disks_dictionary[self.current_player])
                         
-                        print("Contrary's total disks BEFORE:",self.num_disks_dictionary[3 - self.current_player])
+                        # print("Contrary's total disks BEFORE:",self.num_disks_dictionary[3 - self.current_player])
                         self.num_disks_dictionary[3 - self.current_player] -= 1
-                        print("Contrary's total disks AFTER:",self.num_disks_dictionary[3 - self.current_player])
+                        # print("Contrary's total disks AFTER:",self.num_disks_dictionary[3 - self.current_player])
                         counter_of_disks_flipped += 1
                         distance += 1
             
-                print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
+                # print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
