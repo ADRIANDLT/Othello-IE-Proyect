@@ -36,6 +36,9 @@ class Game:
         # Board initialization
         self.board = Board(board_width, board_height)
         
+         # (IL) Set the default cursor state to 'arrow'
+        self.board.cursor = "arrow"
+
         # If you want computer AI White disks to start, uncomment the line below: 
             #self.board.start_timer(2000)
         self.board.cell_size = CELL_SIZE
@@ -63,7 +66,9 @@ class Game:
         self.board.on_timer = self.play_as_ai_computer_player
         # Stack feature for saving movements feature
         self.algo_stack = []
-    
+
+    # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
+        
     def starting_game_initialization(self):
         self.algo_stack.clear()
         # Game settings initialization
@@ -117,7 +122,7 @@ class Game:
         self.current_player = 2 # Save initial state move as player 2 (Computer-AI)
         self.save_moves() # Save state before making a move
         self.current_player = 1 # The turn is for player 1 (Human-user)
-    
+
     def coord_is_valid(self, row, col):
         '''
             Returns: True if row and col are valid, False if not.
@@ -126,7 +131,7 @@ class Game:
         if 0 <= row < self.board_size_n and 0 <= col < self.board_size_n:
             return True
         return False
-    
+
     def copy_board_cell_states(self):
         board_cell_states = [[None for _ in range(8)] for _ in range(8)]
         rows_array = range(0, self.board.nrows, 1)
@@ -136,7 +141,7 @@ class Game:
                 board_cell_states[row][col] = self.board[row][col]
 
         return board_cell_states
-    
+
     def check_last_two_moves_from_same_player(self):
         if len(self.algo_stack) < 2:
             print("Not enough moves to check.")
@@ -156,8 +161,7 @@ class Game:
             return True
         else:
             False
-            
-    
+
     def direction_has_disk_to_flip(self, move, direction, player_number):
 
         #    Parameters: move (tuple), direction (tuple)
@@ -213,70 +217,69 @@ class Game:
                      
         return False
 
-    # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
     def flip_disks_for_current_move(self):
-        '''
-            Flips the contrary's disks for the current move being applied by 
-            updating the board's states:
-            "1" state for black disks and "2" state for white disks.
-            Also, per each flip, increases the number of disks for the current player by 1, 
-            and decreases for the contrary.
-        '''
-        current_disk_type = self.current_player 
-        for direction in POSSIBLE_MOVE_DIRECTIONS:
-            if self.direction_has_disk_to_flip(self.current_move, direction, self.current_player):
-                counter_of_disks_flipped = 0
-                distance = 1
-                while True:
-                    # Calculate the coordinates of the current cell 
-                    # based on the direction. For example, if the current move is (3, 4) and the direction is (-1, 0), 
-                    # then the code calculates the row and column coordinates of the cell 
-                    # to check as follows:
-                    # row = 3 + (-1) * distance = 3 - distance
-                    # col = 4 + 0 * distance = 4
-                    # So, cell as (3 - distance, 4) is checked.
-                    row = self.current_move[0] + direction[0] * distance
-                    col = self.current_move[1] + direction[1] * distance
-                    # If the current cell has a disk of the current player, stop and exit.
-                    if self.board[row][col] == current_disk_type:
-                        break
-                    else:
-                        # Flip the disk on the current cell being analyzed
-                        self.board[row][col] = current_disk_type
+            '''
+                Flips the contrary's disks for the current move being applied by 
+                updating the board's states:
+                "1" state for black disks and "2" state for white disks.
+                Also, per each flip, increases the number of disks for the current player by 1, 
+                and decreases for the contrary.
+            '''
+            current_disk_type = self.current_player 
+            for direction in POSSIBLE_MOVE_DIRECTIONS:
+                if self.direction_has_disk_to_flip(self.current_move, direction, self.current_player):
+                    counter_of_disks_flipped = 0
+                    distance = 1
+                    while True:
+                        # Calculate the coordinates of the current cell 
+                        # based on the direction. For example, if the current move is (3, 4) and the direction is (-1, 0), 
+                        # then the code calculates the row and column coordinates of the cell 
+                        # to check as follows:
+                        # row = 3 + (-1) * distance = 3 - distance
+                        # col = 4 + 0 * distance = 4
+                        # So, cell as (3 - distance, 4) is checked.
+                        row = self.current_move[0] + direction[0] * distance
+                        col = self.current_move[1] + direction[1] * distance
+                        # If the current cell has a disk of the current player, stop and exit.
+                        if self.board[row][col] == current_disk_type:
+                            break
+                        else:
+                            # Flip the disk on the current cell being analyzed
+                            self.board[row][col] = current_disk_type
 
-                        # Update the number of disks for the current player and the contrary
-                        self.num_disks_dictionary[self.current_player] += 1
-                       # print("New current player total disks:",self.num_disks_dictionary[self.current_player])
-                        
-                        # print("Contrary's total disks BEFORE:",self.num_disks_dictionary[3 - self.current_player])
-                        self.num_disks_dictionary[3 - self.current_player] -= 1
-                        # print("Contrary's total disks AFTER:",self.num_disks_dictionary[3 - self.current_player])
-                        counter_of_disks_flipped += 1
-                        distance += 1
-            
-                # print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
-    
+                            # Update the number of disks for the current player and the contrary
+                            self.num_disks_dictionary[self.current_player] += 1
+                        # print("New current player total disks:",self.num_disks_dictionary[self.current_player])
+                            
+                            # print("Contrary's total disks BEFORE:",self.num_disks_dictionary[3 - self.current_player])
+                            self.num_disks_dictionary[3 - self.current_player] -= 1
+                            # print("Contrary's total disks AFTER:",self.num_disks_dictionary[3 - self.current_player])
+                            counter_of_disks_flipped += 1
+                            distance += 1
+                
+                    # print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
+
     def make_current_move(self):
-        ''' 
-            Puts a disk for the player's current move on the board 
-            and then flips the contrary's disks in between. 
-            The update of the disks is made by changing the board's states 
-            (1 for black disks and 2 for white disks), 
-            and increasing the number of disks of the current player by 1.
-            (flip_disks_for_current_move() function should also increase 
-            the number of disks of the current player by 1)
-        '''
-        
-
-        if self.move_has_disk_to_flip(self.current_move, self.current_player): # (ADLT) This is redundant, since we already checked this in play()
-            # Put current player color on the current move cell
-            self.board[self.current_move[0]][self.current_move[1]] = self.current_player
-            # Adds 1 disk to the current players disk count
-            self.num_disks_dictionary[self.current_player] += 1
+            ''' 
+                Puts a disk for the player's current move on the board 
+                and then flips the contrary's disks in between. 
+                The update of the disks is made by changing the board's states 
+                (1 for black disks and 2 for white disks), 
+                and increasing the number of disks of the current player by 1.
+                (flip_disks_for_current_move() function should also increase 
+                the number of disks of the current player by 1)
+            '''
             
-            self.flip_disks_for_current_move()
-            self.save_moves()  # Save state after making a move
 
+            if self.move_has_disk_to_flip(self.current_move, self.current_player): # (ADLT) This is redundant, since we already checked this in play()
+                # Put current player color on the current move cell
+                self.board[self.current_move[0]][self.current_move[1]] = self.current_player
+                # Adds 1 disk to the current players disk count
+                self.num_disks_dictionary[self.current_player] += 1
+                
+                self.flip_disks_for_current_move()
+                self.save_moves()  # Save state after making a move
+    
     def player_can_move(self, player_number):
         ''' 
             Returns: True if the current player has possible moves, False if not.
@@ -301,178 +304,204 @@ class Game:
                
         return player_has_possible_move
     
-
     def current_player_can_move(self):
         ''' 
             Returns: True if the current player has possible moves, False if not.
         ''' 
         return self.player_can_move(self.current_player)
-    
-    def get_possible_moves_by_current_player(self, player_number=None):
-        ''' 
-            Returns a list of possible moves that can be made by the current player
-            Every move is a tuple of coordinates (row, col).
-        '''
-        rows_array = range(0, self.board.nrows, 1)
-        cols_array = range(0, self.board.ncols, 1)
-        allowed_moves_list = []
-        for row in rows_array:
-            for col in cols_array:
-                # Move to check and append if valid
-                move_to_check = (row, col)
-                if self.move_has_disk_to_flip(move=move_to_check, player_number=self.current_player):
-                    allowed_moves_list.append(move_to_check)
 
-        return allowed_moves_list
-    # (ADLT) Returns a list of possible moves that can be made by the current player
-    # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
-    # (TO DO) Evaluate if instead of linked list, a tree is better to store the possible moves
-        # depending on the real AI algorithm to be used.
+    def get_possible_moves_by_current_player(self):
+            ''' 
+                Returns a list of possible moves that can be made by the current player
+                Every move is a tuple of coordinates (row, col).
+            '''
+            rows_array = range(0, self.board.nrows, 1)
+            cols_array = range(0, self.board.ncols, 1)
+            allowed_moves_list = []
+            for row in rows_array:
+                for col in cols_array:
+                    # Move to check and append if valid
+                    move_to_check = (row, col)
+                    if self.move_has_disk_to_flip(move=move_to_check, player_number=self.current_player):
+                        allowed_moves_list.append(move_to_check)
 
-    def evaluate_move(self, move):
-        score = 0
+            return allowed_moves_list
+            # (ADLT) Returns a list of possible moves that can be made by the current player
+            # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
 
-        # Disk flipping score
-        flipping_score = sum(self.direction_has_disk_to_flip(move, direction, self.current_player)
-                             for direction in POSSIBLE_MOVE_DIRECTIONS)
-        score += flipping_score
+    def evaluate_board_state(self):
+            score = 0
 
-        # Board position score
-        if move in [(0, 0), (0, self.board_size_n - 1), (self.board_size_n - 1, 0),
-                    (self.board_size_n - 1, self.board_size_n - 1)]:
-            score += 100  # High score for corners
-        elif move[0] in [0, self.board_size_n - 1] or move[1] in [0, self.board_size_n - 1]:
-            score += 50  # High score for edges
+            # 1. Count the number of pieces for AI and opponent
+            ai_pieces = 0
+            opponent_pieces = 0
+            for row in range(self.board_size_n):
+                for col in range(self.board_size_n):
+                    if self.board[row][col] == 2:  # Assuming AI is player 2
+                        ai_pieces += 1
+                    elif self.board[row][col] == 1:
+                        opponent_pieces += 1
 
-        # Mobility and future opportunities
-        # Temporarily make the move and evaluate the opponent's response
+            score += (ai_pieces - opponent_pieces)
+
+            # 2. Control of corners (corners are more valuable)
+            corner_positions = [(0, 0), (0, self.board_size_n - 1),
+                                (self.board_size_n - 1, 0), (self.board_size_n - 1, self.board_size_n - 1)]
+            for row, col in corner_positions:
+                if self.board[row][col] == 2:
+                    score += 25  # High value for AI owning a corner
+                elif self.board[row][col] == 1:
+                    score -= 25  # High penalty for opponent owning a corner
+
+            # 3. Control of edges
+            # Similar logic can be applied for edges with a lower score than corners
+
+            # 4. Mobility (the number of possible moves)
+            ai_mobility = len(self.get_possible_moves_by_current_player())  # Assuming AI is player 2
+            opponent_mobility = len(self.get_possible_moves_by_current_player())
+            score += (ai_mobility - opponent_mobility)
+
+            # 5. Potential future stability and other heuristics can be added here
+
+            return score
+
+    def evaluate_move(self, move, depth=0, max_depth=3):
+        if depth == max_depth:
+            # Base case: Evaluate the board at the current depth
+            return self.evaluate_board_state()
+
+        # Modify the board temporarily to simulate the move
         original_value = self.board[move[0]][move[1]]
         self.board[move[0]][move[1]] = self.current_player
-        opponent_moves = self.get_possible_moves_by_current_player(3 - self.current_player)
-        self.board[move[0]][move[1]] = original_value  # Revert the temporary move
 
-        mobility_score = -len(opponent_moves)  # Less opponent moves is better
-        score += mobility_score
+        # Evaluate the board after making the move
+        score = self.evaluate_board_state()
 
-        # Stability (more complex to evaluate, can be added later)
+        # Depending on the depth, switch between AI and opponent moves
+        next_player = self.current_player if depth % 2 == 0 else 3 - self.current_player
+
+        # Generate potential moves for the next player
+        next_moves = self.get_possible_moves_by_current_player()
+        if next_moves:
+            if next_player == self.current_player:
+                # Maximize AI score
+                score += max(self.evaluate_move(next_move, depth + 1, max_depth) for next_move in next_moves)
+            else:
+                # Minimize opponent score
+                score -= max(self.evaluate_move(next_move, depth + 1, max_depth) for next_move in next_moves)
+
+        # Revert the move
+        self.board[move[0]][move[1]] = original_value
 
         return score
-    
+
     def make_best_move_by_current_player(self):
-        possible_moves = self.get_possible_moves_by_current_player()
-        if possible_moves:
-            # Evaluate each move and choose the one with the highest score
-            best_move = max(possible_moves, key=lambda move: self.evaluate_move(move))
-            self.current_move = best_move
-            self.make_current_move()
-    
+            best_score = float('-inf')
+            best_move = None
+
+            # Get all possible moves for the AI player
+            possible_moves = self.get_possible_moves_by_current_player()
+
+            # Evaluate each move using the evaluate_move method
+            for move in possible_moves:
+                score = self.evaluate_move(move)
+
+                # Select the move with the highest score
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+
+            # Make the best move if one is found
+            if best_move:
+                self.current_move = best_move
+                self.make_current_move()
+
     def is_game_over(self):
-        if not self.player_can_move(1) and not self.player_can_move(2):
-            if self.num_disks_dictionary[1] > self.num_disks_dictionary[2]:
-                print('*****************')
-                print('Wooohooo! You won!! Congrats!!')
-                self.board.print(MSG + ' -- Wooohooo! You won!! Congrats!!')
-            elif self.num_disks_dictionary[1] < self.num_disks_dictionary[2]:
-                print('*****************')
-                print('Too bad, you lost!! The computer won!! ;)')
-                self.board.print(MSG + ' -- Too bad, you lost!! The computer won!! ;)')
+            if not self.player_can_move(1) and not self.player_can_move(2):
+                if self.num_disks_dictionary[1] > self.num_disks_dictionary[2]:
+                    print('*****************')
+                    print('Wooohooo! You won!! Congrats!!')
+                    self.board.print(MSG + ' -- Wooohooo! You won!! Congrats!!')
+                elif self.num_disks_dictionary[1] < self.num_disks_dictionary[2]:
+                    print('*****************')
+                    print('Too bad, you lost!! The computer won!! ;)')
+                    self.board.print(MSG + ' -- Too bad, you lost!! The computer won!! ;)')
 
-            return True
-        
-        else:
-            return False # Game is not over yet
+                return True
+            
+            else:
+                return False # Game is not over yet
 
-        # (ADLT) TO DO CLEAN UP BELOW IF NOT NEEDED
-
-        # total_disks_on_board = self.num_disks_dict[1] + self.num_disks_dict[2]
-        
-        # (ADLT) Conditions for who won probably needs to improve...
-        # If a player cannot move, then the one who has more disks wins? Or the other moves?
-        
-       # message_for_human_winner = " ****** Wooohooo! You won!! Congrats!!****** "
-       # message_for_computer_ai_winner = " ****** Too bad!! The computer won!! ;) ****** "
-
-
-        # if total_disks_on_board == self.n ** 2:
-            # if self.num_disks_dict[1] > self.num_disks_dict[2]:
-                    # print('*****************')
-                    # print(message_for_human_winner)
-                    # self.board.print(MSG + message_for_human_winner)
-            # else:
-                    # print('*****************')
-                    # print(message_for_computer_ai_winner)
-                    # self.board.print(MSG + message_for_computer_ai_winner)
-
-    
-    
-    #(ADLT) 
-    # This is a very interesting function, since it checks 
-    # if there is any disk to flip and it calculates also how many disks to flip.
-    
+    # (ADLT) Triggered when the user clicks on the board with the mouse.
+    # It shouldnt directly get through here if the computer is thinking/moving, though.
     def play_as_human_player(self, btn, r, c):
         ''' 
             Arguments: 
                         btn: Mouse button clicked
                         r, c are the row/column coordinates where the user clicked on the board.
         '''
-        # TEST
-        print("Mouse Button: ",btn)
-        print("Clicked on Board Coordinates: ",r," ", c)
+        # Indicate that the game is processing the user's input
+        self.board.cursor = "wait"
         
-        # 1. Play the human-user's turn
+        # Check if it's the human user's turn and if they can make a move
         if self.current_player_can_move():
             print("Current player has possible move(s)")
+
             # Update the current move with tuple of coordinates (column, row)
             self.current_move = (r,c)
             
             if self.move_has_disk_to_flip(self.current_move, self.current_player):
                 print("Current move HAS disk(s) to flip: ",r," ", c)
-                # (ADLT)
-                # Disable user's click 
-                self.board.cursor = None   # "watch"
-                # ?? A way to disable mouse-click temporarely with Game2DBoard library...
 
-                # Make the move, actually. Board update, disk paint, disks fliped, etc.
-
+                # Make the move, actually. Board update, disk paint, disks flipped, etc.
                 self.make_current_move()
+
+                # After move, check if game is over
+                if self.is_game_over():
+                    self.board.cursor = "arrow"
+                    return
+
+                self.current_player = 2
+                # Start the timer for the AI move after the human player's turn
+                self.board.start_timer(2000)
 
             else:
                 print("Current move is NOT legal: ",r," ", c)
-                return
+
+        # Reset the cursor to the default state (arrow) after processing user's input
         self.board.cursor = "arrow"
 
-         # Check if the game is over if no moves are possible by AI-computer 
-        # or if the board is full of disks
-        
-        if self.is_game_over():
-            return
-        else:
-            #self.play_as_ai_computer_player() (COMMENTED BECAUSE IT IS COUPLED)
-            # 2. Play the computer-AI turn
-            # Start a Timer (for just one trigger ONLY) for AI-Computer to move
-            # This is the way to decouple the computer-AI move
-            # from the human-user's click, so user's move is painted first
-            # Otherwise user's move and AI-computer move would be painted at the same time.
-            # GitHub issue related: https://github.com/ADRIANDLT/Othello-IE-Proyect/issues/2
-            self.board.start_timer(2000)
-
     def play_as_ai_computer_player(self):
-        # First of all, disable the Timer so it doesn't get triggered again, automatically.
+        
+        # Disable the Timer to prevent re-triggering
         self.board.stop_timer()
 
-        self.board.cursor = None
+        # Set the cursor to indicate AI is processing
+        self.board.cursor = "wait"
 
-        self.current_player = 2
-        # 1. Play the AI-computer´s turn
-        if self.current_player_can_move():
-            print("Current player(AI-Computer) has possible move(s). Player ID: ", self.current_player)
-            time.sleep(2)
-            self.make_best_move_by_current_player()
+        # AI's turn to play
+        # if human player cannot move and is not game over the computer keeps playing with this loop
+        while True:    
+            self.current_player = 2
+            if self.current_player_can_move():
+                print("AI (Player 2) is making a move...")
+                time.sleep(2) # Simulate AI thinking time
 
-    # (ADLT) Triggered when the user clicks on the board with the mouse.
-    # It shouldnt directly get through here if the computer is thinking/moving, though.
+                # AI makes the best move selected by the algorithm
+                # self.make_random_move_by_current_player()
+                self.make_best_move_by_current_player()
 
-   
+            # Check if the game is over after the AI move
+            if self.is_game_over():
+                self.board.cursor = "arrow"
+                return
+            
+            self.current_player = 1
+            if self.current_player_can_move():
+                self.board.cursor = "arrow"
+                # if human player can move after computer´s turn, then exit the loop
+                break
+    
     def undo_last_two_moves(self):
         self.board.cursor = "arrow"
         print("Current player before undoing: ", self.current_player)
@@ -516,7 +545,10 @@ class Game:
         
         print("Current player after undoing: ", self.current_player)
         # refresh of the board is done when the function is finished
-        
+
+    def run(self):
+        self.board.show()
+
     def keyboard_command(self, key):
         if key == "Escape":
             self.board.close()
@@ -524,9 +556,6 @@ class Game:
             self.starting_game_initialization()
         elif key == "u" or key == "U":
             self.undo_last_two_moves()
-            
-    def run(self):
-        self.board.show()
     
     def save_moves(self):
         state = {
@@ -536,6 +565,12 @@ class Game:
             "num_disks_dictionary": self.num_disks_dictionary.copy()
         }
         self.algo_stack.append(state)
-        print("Saved state: ", state)         
-    
-   
+        print("Saved state: ", state)
+
+    def make_random_move_by_current_player(self):
+        # Makes a random possible move on the board.
+        possible_moves = self.get_possible_moves_by_current_player()
+        print("Possible moves for AI-Computer: ", possible_moves)
+        if possible_moves:
+            self.current_move = random.choice(possible_moves)
+            self.make_current_move()
