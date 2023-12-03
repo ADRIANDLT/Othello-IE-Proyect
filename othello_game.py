@@ -485,7 +485,7 @@ class Game:
             self.current_player = 2
             if self.current_player_can_move():
                 print("AI (Player 2) is making a move...")
-                time.sleep(2) # Simulate AI thinking time
+                time.sleep(1) # Simulate AI thinking time
 
                 # AI makes the best move selected by the algorithm
                 # self.make_random_move_by_current_player()
