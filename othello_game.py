@@ -68,13 +68,13 @@ class Game:
         # Stack feature for saving movements feature
         self.algo_stack = []
 
+
     # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
-        
     def starting_game_initialization(self):
         self.algo_stack.clear()
         # Game settings initialization
         
-        # (ADLT) Use a dictionary to store the number of disks for each player
+        # Use a dictionary to store the number of disks for each player
         # so, index 0 (if it was an array) is not used and this way with dictionary 
         # the index coincides with the Player's number (1 or 2). 
 
@@ -125,6 +125,11 @@ class Game:
         self.save_moves() # Save state before making a move
         self.current_player = 1 # The turn is for player 1 (Human-user)
 
+        # Time Complexity:
+        # Worst and Average case = O(1), as it performs a constant number of operations
+        # Best case = O(1), same as above
+
+    # This function verifies if a set of coordinates, given as row and column, are within the bounds of a board.
     def coord_is_valid(self, row, col):
         '''
             Returns: True if row and col are valid, False if not.
@@ -134,6 +139,11 @@ class Game:
             return True
         return False
 
+    # Time Complexity:
+    # Worst, Average, and Best case = O(1)
+
+    # This funcgtions creates and returns an independent copy of the current state of all
+    # cells in a board, which can be usefull when trying to undo moves or use the copied board
     def copy_board_cell_states(self):
         board_cell_states = [[None for _ in range(8)] for _ in range(8)]
         rows_array = range(0, self.board.nrows, 1)
@@ -144,6 +154,10 @@ class Game:
 
         return board_cell_states
 
+    # Time Complexity:
+    # Worst, Average, Best = O(N^2), as it iterates over each cell in the board
+
+    # This function evaluates whether the last two moves in a game were made by the same player.
     def check_last_two_moves_from_same_player(self):
         if len(self.algo_stack) < 2:
             print("Not enough moves to check.")
@@ -162,7 +176,10 @@ class Game:
         if last_player == second_last_player:
             return True
         else:
-            False
+            return False
+
+    # Time Complexity:
+    # Worst, Average, and Best case = O(1)
 
     def direction_has_disk_to_flip(self, move, direction, player_number):
 
@@ -197,7 +214,13 @@ class Game:
                     disks_to_flip_counter += 1
         
         return (disks_to_flip_counter > 0) # Return True if there is any disk to flip, False if not.
-    
+
+    # Time Complexity:
+    # Worst case = O(N), entire borad
+    # Average and Best case = O(1), only few cells checks or only one
+
+    # This function for determining the validity and impact of a player's move,
+    # specifically whether it can capture any of the opponent's pieces, if the player fliped.
     def move_has_disk_to_flip(self, move, player_number):
         ''' 
             Checks whether the player's move is possible.
@@ -217,6 +240,15 @@ class Game:
                      
         return False
 
+    # Time Complexity:
+    # Worst case = O(N), much check all
+    # Average case = O(1), early return
+    # Best case = O(1),  initial conditions fail
+
+    # This function is critical espcially in our game where capturing the
+    # opponent's pieces is a core mechanic. It updates the counts of discs for
+    # each player in accordance with the opponent's discs being flipped to the
+    # player's colour along all valid directions emanating from the move.
     def flip_disks_for_move(self, move):
             '''
                 Flips the contrary's disks for the current move being applied by 
@@ -259,8 +291,20 @@ class Game:
                 
                     # print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
 
+    # Time Complexity:
+    # Worst case = O(N), if it needs to flip disks across the board
+    # Average case = O(1), few flipped
+    # Best case = O(1), no flip
+
+    # This function places a disk on the board for the current player's move,
+    # flips the opponent's disks, it updates the board states, increasing
+    # player's disk count.
     def make_current_move(self):
         self.make_move(self.current_move)
+
+    # Time Complexity:
+    # Worst and Average case = O(N), flipping disks across the board
+    # Best case = O(1), if no disks to flip
 
     def make_move(self, move):
             ''' 
@@ -280,7 +324,14 @@ class Game:
                 
                 self.flip_disks_for_move(move)
                 self.save_moves()  # Save state after making a move
-    
+
+    # Time Complexity:
+    # Worst and Average case = O(N), flipping disks across the board
+    # Best case = O(1), if no disks to flip
+
+    # This function checks if the player has any possible moves left on the board
+    # If yes, the player can make a move that would flip at least one of the
+    # opponent's disks, and if not it the game would be over.
     def player_can_move(self, player_number):
         ''' 
             Returns: True if the current player has possible moves, False if not.
@@ -304,13 +355,24 @@ class Game:
                     return player_has_possible_move
                
         return player_has_possible_move
-    
+
+    # Time Complexity:
+    # Worst and Average case = O(N^2), scanning all cells for a valid move
+    # Best case = O(1), if an early valid move is found
+
+    # Function determines if current player has any moves available
     def current_player_can_move(self):
         ''' 
             Returns: True if the current player has possible moves, False if not.
         ''' 
         return self.player_can_move(self.current_player)
 
+    # Time Complexity: Inherits from player_can_move
+    # Worst and Average case = O(N^2)
+    # Best case = O(1)
+
+    # This function generates and gives a touple list of all valid move coordinates
+    # that the player can make.
     def get_possible_moves_by_current_player(self):
             ''' 
                 Returns a list of possible moves that can be made by the current player
@@ -327,9 +389,15 @@ class Game:
                         allowed_moves_list.append(move_to_check)
 
             return allowed_moves_list
-            # (ADLT) Returns a list of possible moves that can be made by the current player
-            # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
+            # Returns a list of possible moves that can be made by the current player
+            # This is an example of usage of a Linked List, adding moves with .append()
 
+    # Time Complexity:
+    # Worst and Average case = O(N^2), scanning all cells for valid moves
+    # Best case = O(1), if no valid moves are found early
+
+    #  Calculates and returns a score representing the current state of the board
+    #  This takes into account the number of pieces, corners and edges and mobility.
     def evaluate_board_state(self, original_number_of_disks_AI_player, original_board, after_move_board):
             score = 0
             
@@ -356,7 +424,12 @@ class Game:
                 score += 10
 
             return score
-    
+
+    # Time Complexity:
+    # Worst and Average case = O(N^2), scanning the entire board
+    # Best case = O(N^2), as it always scans the entire board
+
+    # This function checks if the AI has a new disk in a corner
     def ai_has_new_disk_in_corner(self, original_board, after_move_board):
         new_ai_disks = []
         for i in range(len(original_board)):
@@ -370,6 +443,11 @@ class Game:
                 return True
         return False
 
+    # Time Complexity:
+    # Worst and Average case_ O(N^2)
+    # Best case= O(N^2), as it always scans the entire board
+
+    # This function checks if the AI has a new disk in an edge
     def ai_has_new_disk_on_edge(self, original_board, after_move_board):
         new_ai_disks = []
         for i in range(len(original_board)):
@@ -387,7 +465,11 @@ class Game:
             if disk in edges:
                 return True
         return False
-    
+
+    # Time Complexity:
+    # Worst, Best and Average case= O(N^2), scanning the entire board
+
+    # This function is used to make a random move on the board for the player.
     def make_random_move_by_current_player(self):
         # Makes a random possible move on the board.
         possible_moves = self.get_possible_moves_by_current_player()
@@ -396,6 +478,11 @@ class Game:
             self.current_move = random.choice(possible_moves)
             self.make_current_move()
 
+    # Time Complexity is constant at a O(N), creating a list of moves depends on the size of the board
+
+    # This method simulates a move, analyses its effect, and then returns the board to its initial
+    # configuration in order to determine how effective a particular move is in a board game.
+    # It returns back a score that represents how effective the move was.
     def evaluate_move_greedy(self, move):
         original_number_of_disks_AI_player = self.num_disks_dictionary[2]
 
@@ -414,6 +501,10 @@ class Game:
 
         return score
 
+    # Time Complexity is constant at a O(N^2)
+
+    # This function can predict the outcome of a move several turns in advance
+    # helping the AI and the computer to determine its next move
     def evaluate_move_minimax(self, move, current_depth=0, max_depth=3):
         original_number_of_disks_AI_player = self.num_disks_dictionary[2]
 
@@ -447,7 +538,13 @@ class Game:
 
         self.undo_last_move()
         return score
-    
+
+    # Time Complexity:
+        # Best Case O(1). Happens when there are no more moves available, so no calls to the recursive function.
+        # Average Case and Worst Case O(n). Depends on how big the averagely branched explored game tree is.
+
+
+    # The function finds and executes the best possible move for the current player in a board game.
     def make_best_move_by_current_player(self):
             best_score = float('-inf')
             best_move = None
@@ -472,6 +569,13 @@ class Game:
                 self.current_move = best_move
                 self.make_current_move()
 
+    # TimeComplexity:
+    # Worst case = O(N * M), maximum number of possible moves to consider.
+    # Average case =  O(N_avg * M), depends on the average number of possible moves the AI can make
+    # Best case = O(N), evaluating a single move
+
+    # This function determines if the game has ended, if both player 1 and 2 have no where else to move
+    # if no one can move it checks the player with most disk and return the winner
     def is_game_over(self):
             if not self.player_can_move(1) and not self.player_can_move(2):
                 if self.num_disks_dictionary[1] > self.num_disks_dictionary[2]:
@@ -489,7 +593,13 @@ class Game:
             else:
                 return False # Game is not over yet
 
-    # (ADLT) Triggered when the user clicks on the board with the mouse.
+    # TimeComplexity:
+    # Worst case = After confirming that neither player can move, it performs the constant time
+    # operation of comparing disk counts, but this does not affect the overall complexity.
+    # Average case =  2 * O(N), both players before determining if the game is over
+    # Best case = O(N), when player 1 wins, thus does not need to check player 2
+
+    # Triggered when the user clicks on the board with the mouse.
     # It shouldnt directly get through here if the computer is thinking/moving, though.
     def play_as_human_player(self, btn, r, c):
         ''' 
@@ -528,6 +638,12 @@ class Game:
         # Reset the cursor to the default state (arrow) after processing user's input
         self.board.cursor = "arrow"
 
+    # TimeComplexity:
+    # Worst, average case = O(M + F + U + G), checking for moves, flipping disks, doing the move, checking if game is over.
+    # Best case = O(N), returns False immediately
+
+    # This function create the AI's game plan, making sure that it makes a move
+    # when it is its turn or until human player can move once more.
     def play_as_ai_computer_player(self):
         
         # Disable the Timer to prevent re-triggering
@@ -561,7 +677,13 @@ class Game:
                 self.board.cursor = "arrow"
                 # if human player can move after computer´s turn, then exit the loop
                 break
-    
+
+    # TimeComplexity:
+    # Worst case = O(W * (M + B + G)), maximum number of iterations as W that AI will make
+    # Average case = O(A * (M + B + G)), a few moves between the AI and the human player
+    # Best case =  O(M + B + G), if the game ends after the computer first move.
+
+
     def count_disks(self, board):
         num_disks_dictionary = {1: 0, 2: 0}
         for row in board:
@@ -569,7 +691,12 @@ class Game:
                 if cell in num_disks_dictionary:
                     num_disks_dictionary[cell] += 1
         return num_disks_dictionary
+    # TimeComplexity:
+    #Time Complexity: O(N^2): The function cycles through every board cell.
+    # The board has a quadratic time complexity if it is N x N in size and needs to check N^2 cells.
 
+    # This function does, to undo the last two moves. Depending on the game's current
+    # and past states. If the human player make mistakes or reconsider different stratgies
     def undo_last_move(self):
         print("Current player before undoing: ", self.current_player)
         print("Number of disks in element 1 of the stack: ", self.algo_stack[1]["num_disks_dictionary"][2])
@@ -609,6 +736,9 @@ class Game:
 
         print("Current player after undoing: ", self.current_player)
         # refresh of the board is done when the function is finished
+    # TimeComplexity:
+    # Worst case and Average case = O(n^2), performs the whole code given back two moves
+    # Best case =   O(1), if there are less the two moves in the stack, returning immediatly
 
     def undo_last_two_moves(self):
         self.board.cursor = "arrow"
@@ -653,10 +783,15 @@ class Game:
         
         print("Current player after undoing: ", self.current_player)
         # refresh of the board is done when the function is finished
+    # TimeComplexity:
+    # Worst case and Average case = O(n^2), performs the whole code given back two moves
 
+    # This function starts the display of the board, starting the game
     def run(self):
         self.board.show()
+    # Time Complexity is constant time of O(1)
 
+    # This function is used to handle keyboard inputs and outputs, and what the user can click.
     def  keyboard_command(self, key):
         if key == "Escape":
             self.board.close()
@@ -673,7 +808,10 @@ class Game:
         elif key == "h" or key == "H":
             self.difficulty = "H"
             self.board.print(MSG + "DIFFICULTY: (E: Easy, M: Medium, H: *Hard*)")
-    
+    # TimeComplexity:
+    # Worst case = O(n), if all the cells have a disk that needs to be copied
+    # Average case and Best case =  O(1), copy and appending into stack
+
     def save_moves(self):
         state = {
             "board": self.copy_board_cell_states(),
@@ -682,9 +820,14 @@ class Game:
         }
         self.algo_stack.append(state)
         print("Saved state: ", state)
+    # TimeComplexity:
+    # Worst case = O(n), if all the cells have a disk that needs to be copied
 
     def copy_num_disks_dictionary(self, original_dict):
         new_dict = {}
         for key, value in original_dict.items():
             new_dict[key] = value
         return new_dict
+
+    # TimeComplexity:
+    # Worst case = O(n), if all the cells have a disk that needs to be copied
