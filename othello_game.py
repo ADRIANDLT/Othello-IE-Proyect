@@ -68,8 +68,9 @@ class Game:
         # Stack feature for saving movements feature
         self.algo_stack = []
 
-
-    # Initializes/resets the game board, placing the initial disks for both players in the center of the board.
+    ####################################################################################################################
+    # Method description: Initializes/resets the game board, placing the initial disks for both players in the center of the board.
+    # Parameters: None (self is implicit)
     def starting_game_initialization(self):
         self.algo_stack.clear()
         # Game settings initialization
@@ -128,19 +129,24 @@ class Game:
         # Time Complexity:
         # Worst and Average case = O(1), as it performs a constant number of operations
         # Best case = O(1), same as above
-
-    # This function verifies if a set of coordinates, given as row and column, are within the bounds of a board.
+        ################################################################################################################################
+        
+    ################################################################################################################################
+    # Method description: This function verifies if a set of coordinates, given as row and column, are within the bounds of a board.
+    # Parameters: (self is implicit)
+    #              row: The row coordinate to check
+    #              col: The column coordinate to check
+    # Returns: True if row and col are valid, False if not. A valid coordinate must be in the range of the board.
     def coord_is_valid(self, row, col):
-        '''
-            Returns: True if row and col are valid, False if not.
-            A valid coordinate must be in the range of the board.
-        '''
+
         if 0 <= row < self.board_size_n and 0 <= col < self.board_size_n:
             return True
         return False
 
-    # Time Complexity:
-    # Worst, Average, and Best case = O(1)
+        # Time Complexity:
+        # Worst, Average, and Best case = O(1)
+        ################################################################################################################################
+
 
     # This funcgtions creates and returns an independent copy of the current state of all
     # cells in a board, which can be usefull when trying to undo moves or use the copied board
@@ -281,11 +287,7 @@ class Game:
 
                             # Update the number of disks for the current player and the contrary
                             self.num_disks_dictionary[self.current_player] += 1
-                        # print("New current player total disks:",self.num_disks_dictionary[self.current_player])
-                            
-                            # print("Contrary's total disks BEFORE:",self.num_disks_dictionary[3 - self.current_player])
                             self.num_disks_dictionary[3 - self.current_player] -= 1
-                            # print("Contrary's total disks AFTER:",self.num_disks_dictionary[3 - self.current_player])
                             counter_of_disks_flipped += 1
                             distance += 1
                 
