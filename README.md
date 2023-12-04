@@ -6,7 +6,7 @@ Othello game using Game2DBoard, data structures and algorithms for computer mind
 
 In your computer, clone this repo from a terminal or PowerShell window (You can use the Anaconda Powershell Prompt, too).
 
-git clone https://github.com/ADRIANDLT/Othello-IE-Proyect.git
+```git clone https://github.com/ADRIANDLT/Othello-IE-Proyect.git```
 
 ## System requirements:
 
@@ -20,21 +20,37 @@ Conda is optional but it will be easier to use a conda environment for the game.
 
 In a terminal window go to the root folder of the cloned repo:
 
-cd my_path_to_the_local_folder_repo
+```cd my_path_to_the_local_folder_repo```
 
 Create a new coda environment like a clone based on the .yaml file
 
-conda env create --file othello-game-python-3-8.yaml
+```conda env create --file othello-game-python-3-8.yaml```
 
-Recommended to create a new Conda environment based on Python 3.8. Example of Conda environment name: othello-python-3-8
+![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/8acde357-dc30-421c-bfa1-41820026a519)
 
-Conda commands:
+Now you can check that you have the new environment created:
 
-conda env list
+```conda env list```
 
-conda activate othello-python-3-8
+![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/4a9dac5d-b6e7-4729-a93f-40d35e9da2c5)
 
-### Python packages to install on activated conda environment
+Now lets activate the new environment:
 
-pip install game2dboard
+```conda activate othello-game-python-3-8```
+
+![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/bf941aa1-7ff8-40de-bcf0-b8fa11e2e9cc)
+
+### Run the game
+
+You can run the game from any IDE (VS Code or PyCharm) or you can directly run it in Python with this command:
+
+```python game_launcher.py```
+
+![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/262a2c5d-0722-429e-829a-15eaae793f18)
+
+### (OPTIONAL) Python packages to install on activated conda environment
+
+If you dont want to create a new conda environment you can also simply install the following python library package in your current python env:
+
+```pip install game2dboard```
 
