@@ -1,9 +1,10 @@
 from game2dboard import Board
 import time
 import random
+from tkinter import messagebox, Tk
 
 # Key commands
-MSG = "U: Undo Last Moves    F2: Restart    ESC: Exit Game"
+MSG = "U: Undo Last Moves    F2: Restart    ESC: Exit Game    "
 
 # Defines sizes of the square and tile, colors of the board, line, 
 # and tile as constants
@@ -35,7 +36,7 @@ class Game:
 
         # Board initialization
         self.board = Board(board_width, board_height)
-        
+
          # (IL) Set the default cursor state to 'arrow'
         self.board.cursor = "arrow"
 
@@ -114,7 +115,8 @@ class Game:
         
         print(self.board)
 
-        self.board.print(MSG)
+        self.difficulty = "M" # Default difficulty is Medium
+        self.board.print(MSG + "DIFFICULTY: (E: Easy, M: *Medium*, H: Hard)")
 
         # Player 1 is Human-user
         # Player 2 is Computer-AI
@@ -205,8 +207,6 @@ class Game:
 
         content_of_move_cell = self.board[move[0]][move[1]]
 
-        # print(self.board)
-
         if move != () and self.coord_is_valid(move[0], move[1]) \
            and content_of_move_cell == None:
             for direction in POSSIBLE_MOVE_DIRECTIONS:
@@ -217,7 +217,7 @@ class Game:
                      
         return False
 
-    def flip_disks_for_current_move(self):
+    def flip_disks_for_move(self, move):
             '''
                 Flips the contrary's disks for the current move being applied by 
                 updating the board's states:
@@ -227,7 +227,7 @@ class Game:
             '''
             current_disk_type = self.current_player 
             for direction in POSSIBLE_MOVE_DIRECTIONS:
-                if self.direction_has_disk_to_flip(self.current_move, direction, self.current_player):
+                if self.direction_has_disk_to_flip(move, direction, self.current_player):
                     counter_of_disks_flipped = 0
                     distance = 1
                     while True:
@@ -238,8 +238,8 @@ class Game:
                         # row = 3 + (-1) * distance = 3 - distance
                         # col = 4 + 0 * distance = 4
                         # So, cell as (3 - distance, 4) is checked.
-                        row = self.current_move[0] + direction[0] * distance
-                        col = self.current_move[1] + direction[1] * distance
+                        row = move[0] + direction[0] * distance
+                        col = move[1] + direction[1] * distance
                         # If the current cell has a disk of the current player, stop and exit.
                         if self.board[row][col] == current_disk_type:
                             break
@@ -260,6 +260,9 @@ class Game:
                     # print("Total disks flipped: ",counter_of_disks_flipped, "for direction: ",direction)
 
     def make_current_move(self):
+        self.make_move(self.current_move)
+
+    def make_move(self, move):
             ''' 
                 Puts a disk for the player's current move on the board 
                 and then flips the contrary's disks in between. 
@@ -269,15 +272,13 @@ class Game:
                 (flip_disks_for_current_move() function should also increase 
                 the number of disks of the current player by 1)
             '''
-            
-
-            if self.move_has_disk_to_flip(self.current_move, self.current_player): # (ADLT) This is redundant, since we already checked this in play()
+            if self.move_has_disk_to_flip(move, self.current_player):
                 # Put current player color on the current move cell
-                self.board[self.current_move[0]][self.current_move[1]] = self.current_player
+                self.board[move[0]][move[1]] = self.current_player
                 # Adds 1 disk to the current players disk count
                 self.num_disks_dictionary[self.current_player] += 1
                 
-                self.flip_disks_for_current_move()
+                self.flip_disks_for_move(move)
                 self.save_moves()  # Save state after making a move
     
     def player_can_move(self, player_number):
@@ -329,9 +330,9 @@ class Game:
             # (ADLT) Returns a list of possible moves that can be made by the current player
             # (ADLT) This is an example of usage of a Linked List, adding moves with .append()
 
-    def evaluate_board_state(self):
+    def evaluate_board_state(self, original_number_of_disks_AI_player, original_board, after_move_board):
             score = 0
-
+            
             # 1. Count the number of pieces for AI and opponent
             ai_pieces = 0
             opponent_pieces = 0
@@ -342,59 +343,111 @@ class Game:
                     elif self.board[row][col] == 1:
                         opponent_pieces += 1
 
-            score += (ai_pieces - opponent_pieces)
+            number_of_new_disks_for_AI = ai_pieces - original_number_of_disks_AI_player
+
+            score += number_of_new_disks_for_AI
 
             # 2. Control of corners (corners are more valuable)
-            corner_positions = [(0, 0), (0, self.board_size_n - 1),
-                                (self.board_size_n - 1, 0), (self.board_size_n - 1, self.board_size_n - 1)]
-            for row, col in corner_positions:
-                if self.board[row][col] == 2:
-                    score += 25  # High value for AI owning a corner
-                elif self.board[row][col] == 1:
-                    score -= 25  # High penalty for opponent owning a corner
+            if self.ai_has_new_disk_in_corner(original_board, after_move_board):
+                score += 25
 
             # 3. Control of edges
-            # Similar logic can be applied for edges with a lower score than corners
-
-            # 4. Mobility (the number of possible moves)
-            ai_mobility = len(self.get_possible_moves_by_current_player())  # Assuming AI is player 2
-            opponent_mobility = len(self.get_possible_moves_by_current_player())
-            score += (ai_mobility - opponent_mobility)
-
-            # 5. Potential future stability and other heuristics can be added here
+            if self.ai_has_new_disk_on_edge(original_board, after_move_board):
+                score += 10
 
             return score
+    
+    def ai_has_new_disk_in_corner(self, original_board, after_move_board):
+        new_ai_disks = []
+        for i in range(len(original_board)):
+            for j in range(len(original_board[i])):
+                if original_board[i][j] != 2 and after_move_board[i][j] == 2:
+                    new_ai_disks.append((i, j))
 
-    def evaluate_move(self, move, depth=0, max_depth=3):
-        if depth == max_depth:
-            # Base case: Evaluate the board at the current depth
-            return self.evaluate_board_state()
+        corners = [(0, 0), (0, len(original_board[0])-1), (len(original_board)-1, 0), (len(original_board)-1, len(original_board[0])-1)]
+        for disk in new_ai_disks:
+            if disk in corners:
+                return True
+        return False
 
-        # Modify the board temporarily to simulate the move
-        original_value = self.board[move[0]][move[1]]
-        self.board[move[0]][move[1]] = self.current_player
+    def ai_has_new_disk_on_edge(self, original_board, after_move_board):
+        new_ai_disks = []
+        for i in range(len(original_board)):
+            for j in range(len(original_board[i])):
+                if original_board[i][j] != 2 and after_move_board[i][j] == 2:
+                    new_ai_disks.append((i, j))
+
+        edges = []
+        edges.extend([(i, 0) for i in range(len(original_board))])  # left edge
+        edges.extend([(i, len(original_board[0])-1) for i in range(len(original_board))])  # right edge
+        edges.extend([(0, j) for j in range(len(original_board[0]))])  # top edge
+        edges.extend([(len(original_board)-1, j) for j in range(len(original_board[0]))])  # bottom edge
+
+        for disk in new_ai_disks:
+            if disk in edges:
+                return True
+        return False
+    
+    def make_random_move_by_current_player(self):
+        # Makes a random possible move on the board.
+        possible_moves = self.get_possible_moves_by_current_player()
+        print("Possible moves for AI-Computer: ", possible_moves)
+        if possible_moves:
+            self.current_move = random.choice(possible_moves)
+            self.make_current_move()
+
+    def evaluate_move_greedy(self, move):
+        original_number_of_disks_AI_player = self.num_disks_dictionary[2]
+
+        original_board = self.copy_board_cell_states()
+
+        # Make the move in the board (including flips) temporarily to simulate the move
+        self.make_move(move)
+
+        after_move_board = self.copy_board_cell_states()
 
         # Evaluate the board after making the move
-        score = self.evaluate_board_state()
+        score = self.evaluate_board_state(original_number_of_disks_AI_player, original_board, after_move_board)
 
-        # Depending on the depth, switch between AI and opponent moves
-        next_player = self.current_player if depth % 2 == 0 else 3 - self.current_player
-
-        # Generate potential moves for the next player
-        next_moves = self.get_possible_moves_by_current_player()
-        if next_moves:
-            if next_player == self.current_player:
-                # Maximize AI score
-                score += max(self.evaluate_move(next_move, depth + 1, max_depth) for next_move in next_moves)
-            else:
-                # Minimize opponent score
-                score -= max(self.evaluate_move(next_move, depth + 1, max_depth) for next_move in next_moves)
-
-        # Revert the move
-        self.board[move[0]][move[1]] = original_value
+        # Revert the move and flips
+        self.undo_last_move()
 
         return score
 
+    def evaluate_move_minimax(self, move, current_depth=0, max_depth=3):
+        original_number_of_disks_AI_player = self.num_disks_dictionary[2]
+
+        original_board = self.copy_board_cell_states()
+
+        # Make the move in the board (including flips) temporarily to simulate the move
+        self.make_move(move)
+
+        after_move_board = self.copy_board_cell_states()
+        
+        if current_depth == max_depth:
+            # Base case: Evaluate the board at the current depth
+            score = self.evaluate_board_state(original_number_of_disks_AI_player, original_board, after_move_board)
+        else:
+            # Evaluate the board after making the move
+            score = self.evaluate_board_state(original_number_of_disks_AI_player, original_board, after_move_board)
+
+            # Depending on the depth, switch between AI and opponent moves
+            next_player = self.current_player if current_depth % 2 == 0 else 3 - self.current_player
+
+            # Generate potential moves for the next player
+            next_moves = self.get_possible_moves_by_current_player()
+            if next_moves:
+                for next_move in next_moves:
+                    if next_player == self.current_player:
+                        # Maximize AI score
+                        score += self.evaluate_move_minimax(next_move, current_depth + 1, max_depth)
+                    else:
+                        # Minimize opponent score
+                        score -= self.evaluate_move_minimax(next_move, current_depth + 1, max_depth)
+
+        self.undo_last_move()
+        return score
+    
     def make_best_move_by_current_player(self):
             best_score = float('-inf')
             best_move = None
@@ -402,9 +455,12 @@ class Game:
             # Get all possible moves for the AI player
             possible_moves = self.get_possible_moves_by_current_player()
 
-            # Evaluate each move using the evaluate_move method
+            # Evaluate each move using the random, greedy or minimax function/method
             for move in possible_moves:
-                score = self.evaluate_move(move)
+                if self.difficulty == "M":
+                    score = self.evaluate_move_greedy(move)
+                elif self.difficulty == "H":
+                    score = self.evaluate_move_minimax(move)
 
                 # Select the move with the highest score
                 if score > best_score:
@@ -421,12 +477,13 @@ class Game:
                 if self.num_disks_dictionary[1] > self.num_disks_dictionary[2]:
                     print('*****************')
                     print('Wooohooo! You won!! Congrats!!')
-                    self.board.print(MSG + ' -- Wooohooo! You won!! Congrats!!')
+                    # self.board.print(MSG + ' -- Wooohooo! You won!! Congrats!!')
+                    messagebox.showinfo("Game Over", "Wooohooo! You won!! Congrats!!")
                 elif self.num_disks_dictionary[1] < self.num_disks_dictionary[2]:
                     print('*****************')
                     print('Too bad, you lost!! The computer won!! ;)')
-                    self.board.print(MSG + ' -- Too bad, you lost!! The computer won!! ;)')
-
+                    # self.board.print(MSG + ' -- Too bad, you lost!! The computer won!! ;)')
+                    messagebox.showinfo("Game Over", "Too bad, you lost!! The computer won!! ;)")
                 return True
             
             else:
@@ -487,6 +544,9 @@ class Game:
                 print("AI (Player 2) is making a move...")
                 time.sleep(1) # Simulate AI thinking time
 
+            if self.difficulty == "E":
+                self.make_random_move_by_current_player()
+            else: # Medium or Hard
                 # AI makes the best move selected by the algorithm
                 # self.make_random_move_by_current_player()
                 self.make_best_move_by_current_player()
@@ -502,6 +562,54 @@ class Game:
                 # if human player can move after computer´s turn, then exit the loop
                 break
     
+    def count_disks(self, board):
+        num_disks_dictionary = {1: 0, 2: 0}
+        for row in board:
+            for cell in row:
+                if cell in num_disks_dictionary:
+                    num_disks_dictionary[cell] += 1
+        return num_disks_dictionary
+
+    def undo_last_move(self):
+        print("Current player before undoing: ", self.current_player)
+        print("Number of disks in element 1 of the stack: ", self.algo_stack[1]["num_disks_dictionary"][2])
+        print("Number of disks for AI player before undoing: ", self.num_disks_dictionary[2])
+        self.board.cursor = "arrow"
+        print("Current player before undoing: ", self.current_player)
+        if len(self.algo_stack) < 2:
+           print("Not possible to undo move since there are no moves to undo.")
+           return
+        
+        # remove the last move from the stack
+        self.algo_stack.remove(self.algo_stack[-1])
+
+        # get last value of the stack without removing it
+        previous_state = self.algo_stack[-1]
+        print("Number of elements in undoing: ", len(self.algo_stack))
+        print("Previous state: ", previous_state)
+        print("Board before undoing:")
+        print(self.board)
+        print("**********")
+        rows_array = range(0, self.board.nrows, 1)
+        cols_array = range(0, self.board.ncols, 1)
+        matrix = previous_state["board"]
+        for row in rows_array:
+            for col in cols_array:
+                self.board[row][col] = matrix[row][col]
+        print("Board after undoing:")
+        print(self.board)
+        print("**********")
+
+        # possible issue with reference to the board, since it is not being updated
+        # self.num_disks_dictionary = previous_state["num_disks_dictionary"]
+        
+        self.num_disks_dictionary = self.count_disks(self.board)
+
+        print("Number of disks for AI player after undoing: ", self.num_disks_dictionary[2])
+
+        print("Current player after undoing: ", self.current_player)
+        # refresh of the board is done when the function is finished
+
     def undo_last_two_moves(self):
         self.board.cursor = "arrow"
         print("Current player before undoing: ", self.current_player)
@@ -549,28 +657,34 @@ class Game:
     def run(self):
         self.board.show()
 
-    def keyboard_command(self, key):
+    def  keyboard_command(self, key):
         if key == "Escape":
             self.board.close()
         elif key == "F2":
             self.starting_game_initialization()
         elif key == "u" or key == "U":
             self.undo_last_two_moves()
+        elif key == "e" or key == "E":
+            self.difficulty = "E"
+            self.board.print(MSG + "DIFFICULTY: (E: *Easy*, M: Medium, H: Hard)")
+        elif key == "m" or key == "M":
+            self.difficulty = "M"
+            self.board.print(MSG + "DIFFICULTY: (E: Easy, M: *Medium*, H: Hard)")
+        elif key == "h" or key == "H":
+            self.difficulty = "H"
+            self.board.print(MSG + "DIFFICULTY: (E: Easy, M: Medium, H: *Hard*)")
     
     def save_moves(self):
         state = {
-            # "board": [[self.board[r][c] for c in range(self.board.ncols)] for r in range(self.board.nrows)],
             "board": self.copy_board_cell_states(),
             "current_player": self.current_player,
-            "num_disks_dictionary": self.num_disks_dictionary.copy()
+            "num_disks_dictionary": self.copy_num_disks_dictionary(self.num_disks_dictionary)
         }
         self.algo_stack.append(state)
         print("Saved state: ", state)
 
-    def make_random_move_by_current_player(self):
-        # Makes a random possible move on the board.
-        possible_moves = self.get_possible_moves_by_current_player()
-        print("Possible moves for AI-Computer: ", possible_moves)
-        if possible_moves:
-            self.current_move = random.choice(possible_moves)
-            self.make_current_move()
+    def copy_num_disks_dictionary(self, original_dict):
+        new_dict = {}
+        for key, value in original_dict.items():
+            new_dict[key] = value
+        return new_dict
