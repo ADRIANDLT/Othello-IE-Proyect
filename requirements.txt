@@ -1,2 +1,1 @@
-game2dBoard==0.2.1
-tkinter==
+game2dboard==0.9.1
