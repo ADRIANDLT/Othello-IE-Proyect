@@ -46,7 +46,8 @@ You can run the game from any IDE (VS Code or PyCharm) or you can directly run i
 
 ```python game_launcher.py```
 
-![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/262a2c5d-0722-429e-829a-15eaae793f18)
+![image](https://github.com/ADRIANDLT/Othello-IE-Proyect/assets/36977944/321fdeba-6d94-4a75-a17d-23677ef27868)
+
 
 ### (OPTIONAL) Python packages to install on activated conda environment
 
