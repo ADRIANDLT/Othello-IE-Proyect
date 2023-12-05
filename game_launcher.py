@@ -1,7 +1,7 @@
 import othello_game
 
 def main():
-    # Phases
+    # Phases:
     
     # Phase 1: Initialize the game
     game = othello_game.Game()
